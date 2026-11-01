@@ -1,56 +1,51 @@
 # expense-tracker-api
 
-REST API for personal expense tracking built with Java 21, Spring Boot, JPA and PostgreSQL. Layered architecture (Controller/Service/Repository), DTO validation, global error handling, Docker Compose and automated tests.
+A REST API for tracking personal expenses, built with Java 21, Spring Boot, JPA and PostgreSQL. I built it as a portfolio project to practice a full backend slice: layered code, validated DTOs, global error handling, a database in Docker Compose and tests.
 
-API REST para controle de despesas pessoais com Java 21, Spring Boot, JPA e PostgreSQL.
+API REST para controle de despesas pessoais, feita com Java 21, Spring Boot, JPA e PostgreSQL.
 
 ## Stack
 
-- Java 21, Spring Boot 3.5, Maven (wrapper included)
+- Java 21, Spring Boot 3.5, Maven (the wrapper is included)
 - Spring Web, Spring Data JPA, Bean Validation
-- PostgreSQL 16 (Docker Compose)
-- JUnit 5, Mockito, MockMvc, H2 (tests)
+- PostgreSQL 16 through Docker Compose
+- JUnit 5, Mockito, MockMvc and H2 for the tests
 
-## Architecture
+## How the code is organized
 
 ```
 controller  ->  service  ->  repository  ->  PostgreSQL
-   |               |
-  DTOs        business rules
-(validation)
 ```
 
-| Package | Responsibility |
-|---|---|
-| `controller` | HTTP layer, request/response mapping |
-| `service` | Business logic and transactions |
-| `repository` | Spring Data JPA access |
-| `dto` | `ExpenseRequest` (validated input) and `ExpenseResponse` |
-| `model` | `Expense` entity and `Category` enum |
-| `exception` | Domain exceptions and `GlobalExceptionHandler` (RFC 7807) |
+- `controller` maps HTTP requests to service calls.
+- `service` holds the business logic and the transactions.
+- `repository` is the Spring Data JPA interface.
+- `dto` has `ExpenseRequest`, which carries the validation rules, and `ExpenseResponse`.
+- `model` has the `Expense` entity and the `Category` enum.
+- `exception` has the domain exceptions and a `GlobalExceptionHandler` that returns RFC 7807 problem details.
 
-## Running
+## Running it
 
-Requirements: Java 21 and Docker.
+You need Java 21 and Docker.
 
 ```bash
 docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-The API starts on `http://localhost:8080`. Database settings can be overridden with `DB_URL`, `DB_USER` and `DB_PASSWORD`.
+The API listens on `http://localhost:8080`. To point it at another database, set `DB_URL`, `DB_USER` and `DB_PASSWORD`.
 
 ## Endpoints
 
-| Method | Path | Description |
+| Method | Path | What it does |
 |---|---|---|
-| `POST` | `/api/expenses` | Create an expense (`201` + `Location`) |
-| `GET` | `/api/expenses/{id}` | Get one expense (`404` if missing) |
-| `GET` | `/api/expenses?category=FOOD` | List expenses, newest first, optional category filter |
+| `POST` | `/api/expenses` | Creates an expense and returns `201` with a `Location` header |
+| `GET` | `/api/expenses/{id}` | Returns one expense, or `404` if it doesn't exist |
+| `GET` | `/api/expenses?category=FOOD` | Lists expenses, newest first, optionally filtered by category |
 
-Categories: `FOOD`, `TRANSPORT`, `HOUSING`, `HEALTH`, `EDUCATION`, `LEISURE`, `OTHER`.
+The valid categories are `FOOD`, `TRANSPORT`, `HOUSING`, `HEALTH`, `EDUCATION`, `LEISURE` and `OTHER`.
 
-### Example
+Creating an expense:
 
 ```bash
 curl -i -X POST http://localhost:8080/api/expenses \
@@ -58,7 +53,7 @@ curl -i -X POST http://localhost:8080/api/expenses \
   -d '{"description":"Supermercado","amount":150.75,"category":"FOOD","date":"2026-10-15"}'
 ```
 
-Validation errors return `400` with the failing fields:
+If the body is invalid, the API answers `400` and lists the fields that failed:
 
 ```json
 {
@@ -75,14 +70,12 @@ Validation errors return `400` with the failing fields:
 ./mvnw test
 ```
 
-- `ExpenseControllerTest`: `@WebMvcTest` covering `POST`, validation errors and `404`
-- `ExpenseRepositoryTest`: `@DataJpaTest` against in-memory H2 (PostgreSQL mode)
-- `ExpenseServiceTest`: unit tests with Mockito
+`ExpenseControllerTest` uses `@WebMvcTest` to cover the `POST` endpoint, the validation errors and the `404`. `ExpenseRepositoryTest` uses `@DataJpaTest` against an in-memory H2 database in PostgreSQL mode, so the suite runs without Docker. `ExpenseServiceTest` covers the service with Mockito.
 
-## Roadmap
+## What's next
 
 - Totals by category and by month
-- `PUT`/`DELETE` and pagination
-- Flyway migrations
-- Repository tests with Testcontainers
-- OpenAPI/Swagger documentation
+- `PUT` and `DELETE`, plus pagination
+- Flyway migrations instead of `ddl-auto: update`
+- Repository tests against a real PostgreSQL with Testcontainers
+- OpenAPI documentation
